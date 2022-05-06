@@ -1,0 +1,164 @@
+---
+title: "ch_15_factors"
+author: "Colby S."
+date: "5/4/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+data(package = 'forcats')
+```
+
+
+```{r}
+month.name
+months <- c("April", "July", "January", "December", "July")
+levels(months)
+months2 <- factor(months, levels= month.name)
+sort(months2)
+
+
+
+count(gss_cat[[race]])
+
+gss_cat %>%
+  count(race)
+```
+
+
+
+
+Explore the distribution of rincome (reported income). What makes the default bar chart hard to understand? How could you improve the plot?
+```{r}
+unique(gss_cat$rincome)
+
+ggplot(data = gss_cat) +
+  geom_bar(mapping =aes(x = rincome)) +
+  coord_flip()
+
+
+
+gss_cat %>%
+  filter(!rincome %in% c("Not applicable")) %>%
+  mutate(rincome = fct_recode(rincome,
+    "Less than $1000" = "Lt $1000"
+  )) %>%
+  mutate(rincome_na = rincome %in% c("Refused", "Don't know", "No answer")) %>%
+  
+  ggplot(aes(x = rincome, fill = rincome_na)) +
+  scale_fill_manual(values = c("FALSE" = "black", "TRUE" = "gray")) +
+  geom_bar() +
+  coord_flip() +
+  scale_y_continuous("Number of Respondents", labels = scales::comma) +
+  scale_x_discrete("Respondent's Income") +
+  theme(legend.position = "None")
+```
+
+What is the most common relig in this survey? What’s the most common partyid?
+```{r}
+gss_cat %>%
+  count(c(relig)) %>%
+  arrange(desc(n)) %>%
+  head(1)
+
+gss_cat %>%
+  count(c(partyid)) %>%
+  arrange(desc(n)) %>%
+  head(1)
+```
+
+Which relig does denom (denomination) apply to? How can you find out with a table? How can you find out with a visualisation?
+```{r}
+names(gss_cat)
+
+gss_cat %>%
+  group_by(relig) %>%
+  distinct(denom) %>%
+  arrange(desc(relig))
+
+gss_cat %>%
+  ggplot() +
+  geom_bar(aes(x=denom)) +
+  facet_wrap(~relig) +
+  coord_flip()
+
+```
+
+### 15.4 Exercises
+There are some suspiciously high numbers in tvhours. Is the mean a good summary?
+```{r}
+gss_cat %>%
+  ggplot() +
+  geom_bar(aes(tvhours))
+
+# calc the mean tv hours watched per day, the mean age, and the number of observations FOR EACH RELIGION
+gss_cat %>%
+  group_by(relig) %>%
+  summarise(
+    tv_mean = mean(tvhours, na.rm = TRUE),
+    age_mean = mean(age, na.rm = TRUE),
+    n = n() 
+  )
+```
+
+For each factor in gss_cat identify whether the order of the levels is arbitrary or principled.
+```{r}
+# keep function to tell if variables are factors
+keep(gss_cat, is.factor) %>%
+  names()
+```
+
+Why did moving “Not applicable” to the front of the levels move it to the bottom of the plot?
+```{r}
+"the factors in first position are closest to the bottom"
+
+```
+
+### 15.5 Exercises 
+How have the proportions of people identifying as Democrat, Republican, and Independent changed over time?
+```{r}
+gss_cat %>%
+  mutate(partyid = fct_collapse(
+    partyid,
+    other = c("No answer", "Don't know", "Other party"),
+    rep = c("Strong republican", "Not str republican"),
+    ind = c("Ind,near rep", "Independent", "Ind,near dem"),
+    dem = c("Not str democrat", "Strong democrat")
+  )) %>%
+  count(year, partyid) %>%
+  
+  group_by(year) %>%
+  mutate(p = n / sum(n)) %>%
+  
+  ggplot() +
+  geom_line(aes(
+    x = year, y = p, 
+    color = fct_reorder2(partyid, year, p))) +
+  
+  scale_fill_manual(values = c("ind" = "gray",
+                               "dem" = "blue",
+                               "rep" = "red",
+                               "other" = "gray")) + #why doesnt this work
+  labs(color = "Party")
+  
+         
+```
+
+How could you collapse rincome into a small set of categories?
+
+```{r}
+unique(gss_cat$rincome)
+
+gss_cat %>%
+  mutate(rincome = fct_collapse(rincome,
+               "low"= c(str_c("$", c(1000, 3000, 4000, 5000), " to ", c(2999, 3999, 4999, 5999))))) %>%
+  ggplot() +
+  geom_bar(aes(x = rincome)) +
+  coord
+```
+

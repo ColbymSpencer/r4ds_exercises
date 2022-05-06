@@ -1,0 +1,33 @@
+---
+title: "ch_14_exercises"
+author: "Colby S."
+date: "4/28/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+str_length(c("a", "R for data science", NA))
+str_length(c("a", "R for data science", NA))[2]
+length(c("a", "R for data science", NA))
+
+str_c("prefix-", c("a", "b", "c"), "-suffix")
+
+name <- "Hadley"
+time_of_day <- "morning"
+birthday <- FALSE
+
+str_c(
+  "Good ", time_of_day, " ", name,
+  if (birthday) " and HAPPY BIRTHDAY",
+  "."
+)
+#> [1] "Good morning Hadley."
+```
+
